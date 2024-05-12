@@ -1,54 +1,90 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <filesystem>
+#include<iostream>
+#include<fstream>
+#include<string>
+#include<filesystem>
+namespace fs=std::filesystem;
+void listDirectory(const std::string &path){
+    for(const auto& entry: fs::directory_iterator(path)){
+        std::cout<<entry.path().filename().string()<<std::endl;
 
-namespace fs = std::filesystem;
-
-void createDirectory(const std::string& dirName) {
-    if (fs::create_directory(dirName)) {
-        std::cout << "Directory created: " << dirName << std::endl;
-    } else {
-        std::cerr << "Error creating directory: " << dirName << std::endl;
     }
 }
+void viewfile(const std::string& filePath){
+    std::ifstream file(filePath);
+    if(file.is_open()){
+        std::string line;
+        while (std::getline(file,line)){
+            std::cout<<line<<std::endl;
 
-void copyFile(const std::string& source, const std::string& destination) {
-    try {
-        fs::copy(source, destination);
-        std::cout << "File copied from " << source << " to " << destination << std::endl;
-    } catch (const fs::filesystem_error& e) {
-        std::cerr << "Error copying file: " << e.what() << std::endl;
-    }
-}
-
-int main() {
-    std::string currentDir = fs::current_path().string();
-    std::cout << "Current directory: " << currentDir << std::endl;
-
-    std::string command;
-    while (true) {
-        std::cout << "\nEnter a command (create/move/copy/exit): ";
-        std::cin >> command;
-
-        if (command == "create") {
-            std::string dirName;
-            std::cout << "Enter directory name: ";
-            std::cin >> dirName;
-            createDirectory(dirName);
-        } else if (command == "copy") {
-            std::string source, destination;
-            std::cout << "Enter source file path: ";
-            std::cin >> source;
-            std::cout << "Enter destination file path: ";
-            std::cin >> destination;
-            copyFile(source, destination);
-        } else if (command == "exit") {
-            break;
-        } else {
-            std::cout << "Invalid command. Try again." << std::endl;
         }
-    }
+        file.close();
+        }
+        else{
+            std::cerr<<"Unable to open file:"<<filePath<<std::endl;
 
+        }
+}
+
+void createDirectory(const std::string& dirPath){
+    if(!fs::create_directory(dirPath)){
+        std::cerr<<"Failed to create directoy: "<<dirPath<<std::endl;
+
+    }
+}
+
+void copyFile(const std::string&  source, const std::string& designation){
+    fs::copy(source,designation, fs::copy_options::overwrite_existing);
+}
+
+void movefile(const std::string& source, std::string& designation){
+    fs::rename(source,designation);
+}
+int main(){
+    std:: string command;
+    std::cout<<"*************WELCOME TO FILE MANAGER:*************"<<std::endl;
+    while(true){
+        std::cout<<"Enter a command(list,view<filename>,create<dirname>,copy<source><designation>,move<source><designatipon>)"<<std::endl;
+        std::getline(std::cin,command);
+
+        std::istringstream iss(command);
+        std::string action;
+        iss>>action;
+        
+        if(action=="list"){
+            std::string path;
+            iss>>path;
+            listDirectory(path);
+        }
+        else if(action=="view"){
+            std::string filename;
+            iss>>filename;
+            viewfile(filename);
+        }
+        else if(action=="create"){
+            std::string dirname;
+            iss>>dirname;
+            createDirectory(dirname);
+        }
+        else if(action=="copy"){
+            std::string source,designation;
+            iss>>source>>designation;
+            copyFile(source,designation);
+        }
+        else if(action=="move"){
+            std::string source,designation;
+            iss>>source>>designation;
+            movefile(source,designation);
+        }
+        else if(action=="exit"){
+            break;
+        }
+        else{
+            std::cerr<<"INVALID COMMAND!"<<std::endl;
+
+        }
+
+    }
+    std::cout<<"EXISTING BASIC FILE MANAGER! . goodbye"<<std::endl;
     return 0;
+
 }
